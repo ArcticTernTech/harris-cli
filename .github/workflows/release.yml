@@ -1,0 +1,96 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build macOS arm64
+    runs-on: macos-latest   # GitHub M1 runner
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install dependencies
+        run: |
+          pip install -e .
+          pip install pyinstaller
+
+      - name: Build binary
+        run: pyinstaller harris.spec
+
+      - name: Package
+        run: |
+          VERSION=${GITHUB_REF_NAME}
+          cd dist
+          tar -czf harris-darwin-arm64.tar.gz harris
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/harris-darwin-arm64.tar.gz
+          generate_release_notes: true
+
+  update-formula:
+    name: Update Homebrew Formula
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download release asset and compute sha256
+        run: |
+          VERSION=${GITHUB_REF_NAME}
+          URL="https://github.com/ArcticTernTech/harris-cli/releases/download/${VERSION}/harris-darwin-arm64.tar.gz"
+          curl -sL "$URL" -o harris.tar.gz
+          SHA256=$(sha256sum harris.tar.gz | awk '{print $1}')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "SHA256=$SHA256" >> $GITHUB_ENV
+          echo "URL=$URL" >> $GITHUB_ENV
+
+      - name: Checkout homebrew tap
+        uses: actions/checkout@v4
+        with:
+          repository: ArcticTernTech/homebrew-tools
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: homebrew-tools
+
+      - name: Update Formula
+        run: |
+          cat > homebrew-tools/Formula/harris-cli.rb << EOF
+          class HarrisCli < Formula
+            desc "跨境电商运营 CLI — 多平台、多账号统一管理"
+            homepage "https://github.com/ArcticTernTech/harris-cli"
+            version "${{ env.VERSION }}"
+
+            on_macos do
+              on_arm do
+                url "${{ env.URL }}"
+                sha256 "${{ env.SHA256 }}"
+              end
+            end
+
+            def install
+              bin.install "harris"
+            end
+
+            test do
+              system "\#{bin}/harris", "--version"
+            end
+          end
+          EOF
+
+      - name: Commit and push
+        run: |
+          cd homebrew-tools
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/harris-cli.rb
+          git commit -m "chore: bump harris-cli to ${{ env.VERSION }}"
+          git push

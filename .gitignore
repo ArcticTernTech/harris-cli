@@ -7,6 +7,6 @@ dist/
 build/
 *.egg-info/
 .eggs/
-*.spec
+# *.spec  # PyInstaller spec 需要跟踪
 *.DS_Store
 .env
