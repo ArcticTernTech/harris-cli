@@ -49,8 +49,28 @@ def export_json(rows: list, path: str) -> None:
     console.print(f"[green]已导出 {len(rows)} 条记录到 {path}[/green]")
 
 
-def output(rows: list, columns: list[tuple[str, str, str]], title: str = "", out: str | None = None) -> None:
-    """统一出口：out=None 打印表格，out=*.csv 导出CSV，out=*.json 导出JSON"""
+def output(
+    rows: list,
+    columns: list[tuple[str, str, str]],
+    title: str = "",
+    out: str | None = None,
+    fmt: str | None = None,
+) -> None:
+    """统一出口：
+    - fmt=json → 输出纯 JSON 到 stdout（适合 AI Agent）
+    - out=*.csv / *.json → 导出到文件
+    - 默认 → Rich 表格
+    """
+    if fmt and fmt.lower() == "json":
+        data = []
+        for row in rows:
+            d = asdict(row) if hasattr(row, "__dataclass_fields__") else row
+            for k, v in d.items():
+                if hasattr(v, "isoformat"):
+                    d[k] = v.isoformat()
+            data.append(d)
+        print(json.dumps(data, ensure_ascii=False, indent=2))
+        return
     if not out:
         render_table(rows, columns, title)
     elif out.endswith(".json"):

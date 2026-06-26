@@ -22,14 +22,15 @@ def list_inventory(
     sku: str = typer.Option(None, "--sku", help="按 SKU 过滤"),
     low: int = typer.Option(None, "--low", help="只显示库存低于此数量的 SKU"),
     out: str = typer.Option(None, "--output", "-o", help="导出路径，支持 .csv / .json"),
+    fmt: str = typer.Option(None, "--format", "-f", help="输出格式: json（适合 AI Agent）"),
 ):
-    """查看 FBA 库存"""
+    """查看库存"""
     with console.status("获取库存中..."):
         items = client.get("/inventory", account=account, sku=sku, low=low)
     if not items:
         console.print("[yellow]没有库存记录[/yellow]")
         return
-    render_output(items, INVENTORY_COLUMNS, title=f"FBA 库存（共 {len(items)} 个 SKU）", out=out)
+    render_output(items, INVENTORY_COLUMNS, title=f"库存（共 {len(items)} 个 SKU）", out=out, fmt=fmt)
 
 
 @app.command("alert")

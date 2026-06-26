@@ -130,6 +130,44 @@ def add_account(
     console.print(f"[green]账号 '{acc['name']}' ({acc['marketplace']}) 已添加[/green]")
 
 
+@account_app.command("add-mock")
+def add_mock_account(
+    name: str = typer.Option(..., "--name", "-n", help="账号别名，如 test_mock"),
+):
+    """添加 Mock 测试账号（本地开发用，返回假数据，不调用真实平台 API）"""
+    acc = client.post("/admin/accounts", {
+        "name": name,
+        "platform": "mock",
+        "marketplace": "MOCK",
+        "credentials": {},
+    })
+    console.print(f"[green]Mock 账号 '{acc['name']}' 已添加，可用于开发测试[/green]")
+
+
+@account_app.command("add-coupang")
+def add_coupang_account(
+    name: str = typer.Option(..., "--name", "-n", help="账号别名，如 store_kr_1"),
+    access_key: str = typer.Option(..., "--access-key", help="Coupang Open API Access Key"),
+    secret_key: str = typer.Option(..., "--secret-key", help="Coupang Open API Secret Key"),
+    vendor_id: str = typer.Option(..., "--vendor-id", help="Vendor ID，如 A00012345"),
+    tz_offset: str = typer.Option("+09:00", "--tz", help="时区偏移，韩国 +09:00，台湾 +08:00"),
+):
+    """添加 Coupang 平台账号（凭证加密存储在服务器）"""
+    credentials = {
+        "access_key": access_key,
+        "secret_key": secret_key,
+        "vendor_id": vendor_id,
+        "tz_offset": tz_offset,
+    }
+    acc = client.post("/admin/accounts", {
+        "name": name,
+        "platform": "coupang",
+        "marketplace": "KR",
+        "credentials": credentials,
+    })
+    console.print(f"[green]Coupang 账号 '{acc['name']}' 已添加[/green]")
+
+
 @account_app.command("remove")
 def remove_account(name: str = typer.Option(..., "--name", "-n")):
     """删除平台账号"""

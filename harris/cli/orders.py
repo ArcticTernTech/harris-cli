@@ -25,6 +25,7 @@ def list_orders(
     days: int = typer.Option(7, "--days", "-d", help="最近 N 天"),
     status: str = typer.Option(None, "--status", "-s", help="状态过滤"),
     out: str = typer.Option(None, "--output", "-o", help="导出路径，支持 .csv / .json"),
+    fmt: str = typer.Option(None, "--format", "-f", help="输出格式: json（适合 AI Agent）"),
 ):
     """列出订单"""
     with console.status("获取订单中..."):
@@ -32,7 +33,7 @@ def list_orders(
     if not orders:
         console.print("[yellow]没有找到订单[/yellow]")
         return
-    render_output(orders, ORDER_COLUMNS, title=f"订单列表（共 {len(orders)} 个）", out=out)
+    render_output(orders, ORDER_COLUMNS, title=f"订单列表（共 {len(orders)} 个）", out=out, fmt=fmt)
 
 
 @app.command("get")

@@ -1,6 +1,6 @@
 # Harris CLI
 
-跨境电商运营工具，支持 Amazon 多账号统一管理——查订单、看库存、改价格、下报表，一条命令搞定。
+跨境电商运营工具，支持 Amazon / Coupang 多平台、多账号统一管理——查订单、看库存、改价格、查结算，一条命令搞定。
 
 ---
 
@@ -52,25 +52,27 @@ harris logout    # 退出登录
 ```
 harris
 ├── login / logout / whoami      账号管理
-├── orders                       订单
+├── orders                       订单（Amazon + Coupang）
 │   ├── list                     列出订单
 │   └── get <订单号>              查看单个订单
-├── inventory                    库存
-│   ├── list                     查看 FBA 库存
+├── inventory                    库存（Amazon + Coupang）
+│   ├── list                     查看库存
 │   └── alert                    显示需要补货的 SKU
-├── listings                     Listing
-│   └── list                     查看 Listing 列表
-├── pricing                      定价
+├── listings                     商品列表（Amazon + Coupang）
+│   └── list                     查看商品列表
+├── pricing                      定价（Amazon + Coupang）
 │   ├── get                      查看当前价格
 │   ├── update                   修改单个价格
 │   └── bulk                     从 CSV 批量改价
-├── reports                      报表
+├── reports                      报表（Amazon）
 │   ├── request                  请求生成报表
 │   ├── status                   查询报表状态
 │   └── download                 下载报表内容
+├── settlement                   结算明细（Coupang）
+│   └── list                     按月查询结算数据
 └── admin                        管理员功能
     ├── user list/add/...        用户管理
-    ├── account list/add/...     店铺账号管理
+    ├── account list/add/...     店铺账号管理（Amazon + Coupang）
     └── logs                     操作日志
 ```
 
@@ -236,6 +238,30 @@ harris reports download \
 
 ---
 
+## Coupang 结算
+
+```bash
+# 查询指定月份的结算明细
+harris settlement list --account store_kr_1 --month 2026-06
+```
+
+输出包含：结算类型（月结/周结）、结算日期、总销售额、手续费、最终到账金额及结算状态。
+
+---
+
+## AI Agent 友好输出
+
+所有列表命令支持 `--format json` 参数，将结果以纯 JSON 格式输出到 stdout，适合 AI Agent 或脚本解析：
+
+```bash
+harris orders list --account store_kr_1 --format json
+harris listings list --account store_kr_1 --format json
+harris inventory list --account store_kr_1 --format json
+harris settlement list --account store_kr_1 --month 2026-06 --format json
+```
+
+---
+
 ## 管理员功能
 
 > 需要 `admin` 角色
@@ -274,6 +300,21 @@ harris admin account add \
   --refresh-token ... \
   --aws-key AKIA... \
   --aws-secret ...
+
+# 添加 Coupang 账号（凭证在 WING > 卖家信息 > API 管理 获取）
+harris admin account add-coupang \
+  --name store_kr_1 \
+  --access-key YOUR_ACCESS_KEY \
+  --secret-key YOUR_SECRET_KEY \
+  --vendor-id A00012345
+
+# 台湾店铺需指定时区
+harris admin account add-coupang \
+  --name store_tw_1 \
+  --access-key YOUR_ACCESS_KEY \
+  --secret-key YOUR_SECRET_KEY \
+  --vendor-id A00012345 \
+  --tz +08:00
 
 # 删除账号
 harris admin account remove --name store_us_1

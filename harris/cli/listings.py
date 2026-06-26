@@ -24,11 +24,12 @@ def list_listings(
     sku: str = typer.Option(None, "--sku", help="按 SKU 过滤"),
     status: str = typer.Option(None, "--status", "-s", help="状态过滤: active/inactive/incomplete"),
     out: str = typer.Option(None, "--output", "-o", help="导出路径 .csv/.json"),
+    fmt: str = typer.Option(None, "--format", "-f", help="输出格式: json（适合 AI Agent）"),
 ):
-    """查看 Listing 列表"""
-    with console.status("获取 Listing 中..."):
+    """查看商品列表"""
+    with console.status("获取商品中..."):
         listings = client.get("/listings", account=account, sku=sku, status=status)
     if not listings:
-        console.print("[yellow]没有找到 Listing[/yellow]")
+        console.print("[yellow]没有找到商品[/yellow]")
         return
-    render_output(listings, LISTING_COLUMNS, title=f"Listing 列表（共 {len(listings)} 个）", out=out)
+    render_output(listings, LISTING_COLUMNS, title=f"商品列表（共 {len(listings)} 个）", out=out, fmt=fmt)
