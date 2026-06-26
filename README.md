@@ -20,6 +20,7 @@
 
 ```bash
 brew tap ArcticTernTech/tools
+brew trust arcticterntech/tools
 brew install harris-cli
 ```
 
