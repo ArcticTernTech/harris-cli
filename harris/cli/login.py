@@ -37,14 +37,18 @@ def login(
                 token_holder["refresh_token"] = params["refresh_token"][0]
                 token_holder["username"]      = params["username"][0]
                 token_holder["role"]          = params["role"][0]
+                html = (
+                    "<!DOCTYPE html><html><head><meta charset='utf-8'></head>"
+                    "<body style='font-family:sans-serif;text-align:center;padding:60px'>"
+                    "<h2>✓ 授权成功！</h2>"
+                    "<p>可以关闭此窗口。</p>"
+                    "</body></html>"
+                ).encode("utf-8")
                 self.send_response(200)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Content-Length", str(len(html)))
                 self.end_headers()
-                self.wfile.write(
-                    b"<html><body style='font-family:sans-serif;text-align:center;padding:60px'>"
-                    b"<h2>&#10003; \xe6\x8e\x88\xe6\x9d\x83\xe6\x88\x90\xe5\x8a\x9f\xef\xbc\x81</h2>"
-                    b"<p>\xe5\x8f\xaf\xe4\xbb\xa5\xe5\x85\xb3\xe9\x97\xad\xe6\xad\xa4\xe7\xaa\x97\xe5\x8f\xa3\xe3\x80\x82</p>"
-                    b"</body></html>"
-                )
+                self.wfile.write(html)
             else:
                 self.send_response(400)
                 self.end_headers()
