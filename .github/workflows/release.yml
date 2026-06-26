@@ -52,7 +52,7 @@ jobs:
           VERSION=${GITHUB_REF_NAME}
           URL="https://github.com/ArcticTernTech/harris-cli/releases/download/${VERSION}/harris-darwin-arm64.tar.gz"
           curl -sL "$URL" -o harris.tar.gz
-          SHA256=$(sha256sum harris.tar.gz | awk '{print $1}')
+          SHA256=$(openssl dgst -sha256 harris.tar.gz | awk '{print $2}')
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "SHA256=$SHA256" >> $GITHUB_ENV
           echo "URL=$URL" >> $GITHUB_ENV
