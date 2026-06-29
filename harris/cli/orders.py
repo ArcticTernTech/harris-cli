@@ -16,13 +16,11 @@ ORDER_COLUMNS = [
     ("件数",    "items_count",   ""),
 ]
 
-STATUS_STYLE = {"Pending": "yellow", "Unshipped": "blue", "Shipped": "green", "Canceled": "red"}
-
 
 @app.command("list")
 def list_orders(
-    platform: str = typer.Option(..., "--platform", "-p", help="平台: amazon / coupang / mock"),
     store: str = typer.Option(..., "--store", "-s", help="店铺名称，如 rovestep"),
+    platform: str = typer.Option(None, "--platform", "-p", help="平台: amazon/coupang/mock（多平台时必填）"),
     days: int = typer.Option(7, "--days", "-d", help="最近 N 天"),
     status: str = typer.Option(None, "--status", help="状态过滤"),
     out: str = typer.Option(None, "--output", "-o", help="导出路径，支持 .csv / .json"),
@@ -30,7 +28,7 @@ def list_orders(
 ):
     """列出订单"""
     with console.status("获取订单中..."):
-        orders = client.get("/orders", platform=platform, store=store, days=days, status=status)
+        orders = client.get("/orders", store=store, platform=platform, days=days, status=status)
     if not orders:
         console.print("[yellow]没有找到订单[/yellow]")
         return
@@ -40,11 +38,11 @@ def list_orders(
 @app.command("get")
 def get_order(
     order_id: str = typer.Argument(help="订单号"),
-    platform: str = typer.Option(..., "--platform", "-p", help="平台: amazon / coupang / mock"),
     store: str = typer.Option(..., "--store", "-s", help="店铺名称，如 rovestep"),
+    platform: str = typer.Option(None, "--platform", "-p", help="平台: amazon/coupang/mock（多平台时必填）"),
 ):
     """查看订单详情"""
     with console.status(f"获取订单 {order_id}..."):
-        order = client.get(f"/orders/{order_id}", platform=platform, store=store)
+        order = client.get(f"/orders/{order_id}", store=store, platform=platform)
     for k, v in order.items():
         console.print(f"[bold]{k}:[/bold] {v}")

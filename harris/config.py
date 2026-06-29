@@ -46,6 +46,13 @@ def delete_account(name: str) -> None:
     save_config(config)
 
 
+def is_json_mode() -> bool:
+    """True 时所有输出（含错误）以 JSON 格式到 stdout，适合 AI Agent 调用。
+    通过环境变量 HARRIS_FORMAT=json 或单命令 --format json 触发。"""
+    import os
+    return os.environ.get("HARRIS_FORMAT", "").lower() == "json"
+
+
 def get_server_url() -> str:
     import os
     if url := os.environ.get("HARRIS_SERVER_URL"):

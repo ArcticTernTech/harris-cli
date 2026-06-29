@@ -20,8 +20,8 @@ LISTING_COLUMNS = [
 
 @app.command("list")
 def list_listings(
-    platform: str = typer.Option(..., "--platform", "-p", help="平台: amazon / coupang / mock"),
     store: str = typer.Option(..., "--store", "-s", help="店铺名称，如 rovestep"),
+    platform: str = typer.Option(None, "--platform", "-p", help="平台: amazon/coupang/mock（多平台时必填）"),
     sku: str = typer.Option(None, "--sku", help="按 SKU 过滤"),
     status: str = typer.Option(None, "--status", help="状态过滤: active/inactive/incomplete"),
     out: str = typer.Option(None, "--output", "-o", help="导出路径 .csv/.json"),
@@ -29,7 +29,7 @@ def list_listings(
 ):
     """查看商品列表"""
     with console.status("获取商品中..."):
-        listings = client.get("/listings", platform=platform, store=store, sku=sku, status=status)
+        listings = client.get("/listings", store=store, platform=platform, sku=sku, status=status)
     if not listings:
         console.print("[yellow]没有找到商品[/yellow]")
         return

@@ -57,11 +57,12 @@ def output(
     fmt: str | None = None,
 ) -> None:
     """统一出口：
-    - fmt=json → 输出纯 JSON 到 stdout（适合 AI Agent）
+    - fmt=json 或 HARRIS_FORMAT=json → 输出纯 JSON 到 stdout（适合 AI Agent）
     - out=*.csv / *.json → 导出到文件
     - 默认 → Rich 表格
     """
-    if fmt and fmt.lower() == "json":
+    from .config import is_json_mode
+    if (fmt and fmt.lower() == "json") or is_json_mode():
         data = []
         for row in rows:
             d = asdict(row) if hasattr(row, "__dataclass_fields__") else row

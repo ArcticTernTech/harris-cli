@@ -3,6 +3,7 @@ from rich.console import Console
 
 from .cli import auth, orders, inventory, listings, pricing, reports, admin, settlement
 from .cli.login import login, logout, whoami
+from .cli.context import get_context
 
 app = typer.Typer(
     name="harris",
@@ -14,6 +15,7 @@ console = Console()
 app.command("login")(login)
 app.command("logout")(logout)
 app.command("whoami")(whoami)
+app.command("context")(get_context)
 app.add_typer(orders.app,    name="orders",    help="订单管理")
 app.add_typer(inventory.app, name="inventory", help="库存管理")
 app.add_typer(listings.app,  name="listings",  help="Listing 管理")
