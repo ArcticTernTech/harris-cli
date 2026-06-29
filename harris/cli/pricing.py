@@ -9,12 +9,13 @@ console = Console()
 
 @app.command("get")
 def get_price(
-    account: str = typer.Option(..., "--account", "-a", help="账号别名"),
+    platform: str = typer.Option(..., "--platform", "-p", help="平台: amazon / coupang / mock"),
+    store: str = typer.Option(..., "--store", "-s", help="店铺名称，如 rovestep"),
     sku: str = typer.Option(..., "--sku", help="SKU"),
 ):
     """查看当前价格"""
     with console.status(f"获取 {sku} 价格..."):
-        listings = client.get("/listings", account=account, sku=sku)
+        listings = client.get("/listings", platform=platform, store=store, sku=sku)
     if not listings:
         console.print(f"[yellow]未找到 SKU: {sku}[/yellow]")
         return
@@ -30,19 +31,21 @@ def get_price(
 
 @app.command("update")
 def update_price(
-    account: str = typer.Option(..., "--account", "-a", help="账号别名"),
+    platform: str = typer.Option(..., "--platform", "-p", help="平台: amazon / coupang / mock"),
+    store: str = typer.Option(..., "--store", "-s", help="店铺名称，如 rovestep"),
     sku: str = typer.Option(..., "--sku", help="SKU"),
-    price: float = typer.Option(..., "--price", "-p", help="新价格"),
+    price: float = typer.Option(..., "--price", help="新价格"),
     currency: str = typer.Option("USD", "--currency", help="币种"),
 ):
     """更新单个 SKU 价格"""
-    client.put("/pricing", {"account": account, "sku": sku, "price": price, "currency": currency})
+    client.put("/pricing", {"platform": platform, "store": store, "sku": sku, "price": price, "currency": currency})
     console.print(f"[green]{sku} 价格已更新为 {currency} {price:.2f}[/green]")
 
 
 @app.command("bulk")
 def bulk_update(
-    account: str = typer.Option(..., "--account", "-a", help="账号别名"),
+    platform: str = typer.Option(..., "--platform", "-p", help="平台: amazon / coupang / mock"),
+    store: str = typer.Option(..., "--store", "-s", help="店铺名称，如 rovestep"),
     file: str = typer.Option(..., "--file", "-f", help="CSV 文件，格式: sku,price"),
     currency: str = typer.Option("USD", "--currency", help="币种"),
     dry_run: bool = typer.Option(False, "--dry-run", help="只验证不实际提交"),
@@ -55,7 +58,10 @@ def bulk_update(
     if not rows:
         console.print("[yellow]CSV 为空[/yellow]")
         return
-    result = client.post("/pricing/bulk", {"account": account, "rows": rows, "currency": currency, "dry_run": dry_run})
+    result = client.post("/pricing/bulk", {
+        "platform": platform, "store": store,
+        "rows": rows, "currency": currency, "dry_run": dry_run,
+    })
     if dry_run:
         console.print(f"[dim]Dry run：共 {len(rows)} 条，不实际提交[/dim]")
     else:

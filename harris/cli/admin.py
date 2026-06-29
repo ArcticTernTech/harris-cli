@@ -67,21 +67,23 @@ def disable_user(user_id: int = typer.Option(..., "--id")):
 @user_app.command("grant")
 def grant_access(
     user_id: int = typer.Option(..., "--id", help="用户 ID"),
-    account: str = typer.Option(..., "--account", "-a", help="店铺名称"),
+    platform: str = typer.Option(..., "--platform", "-p", help="平台: amazon / coupang / mock"),
+    store: str = typer.Option(..., "--store", "-s", help="店铺名称，如 rovestep"),
 ):
-    """授权用户访问某个店铺"""
-    client.post(f"/admin/users/{user_id}/accounts/{account}", {})
-    console.print(f"[green]已授权用户 {user_id} 访问账号 '{account}'[/green]")
+    """授权用户访问某个账号"""
+    client.post(f"/admin/users/{user_id}/accounts/{platform}/{store}", {})
+    console.print(f"[green]已授权用户 {user_id} 访问 {platform}:{store}[/green]")
 
 
 @user_app.command("revoke")
 def revoke_access(
     user_id: int = typer.Option(..., "--id"),
-    account: str = typer.Option(..., "--account", "-a"),
+    platform: str = typer.Option(..., "--platform", "-p", help="平台: amazon / coupang / mock"),
+    store: str = typer.Option(..., "--store", "-s", help="店铺名称，如 rovestep"),
 ):
-    """撤销用户对某个店铺的访问"""
-    client.delete(f"/admin/users/{user_id}/accounts/{account}")
-    console.print(f"[green]已撤销用户 {user_id} 对账号 '{account}' 的访问[/green]")
+    """撤销用户对某个账号的访问"""
+    client.delete(f"/admin/users/{user_id}/accounts/{platform}/{store}")
+    console.print(f"[green]已撤销用户 {user_id} 对 {platform}:{store} 的访问[/green]")
 
 
 # ── 平台账号管理 ──
@@ -91,18 +93,18 @@ def list_accounts():
     """列出所有平台账号"""
     accounts = client.get("/admin/accounts")
     table = Table(title="平台账号")
-    table.add_column("名称", style="bold cyan")
+    table.add_column("店铺", style="bold cyan")
     table.add_column("平台")
     table.add_column("站点")
     table.add_column("创建时间", style="dim")
     for acc in accounts:
-        table.add_row(acc["name"], acc["platform"], acc["marketplace"], acc["created_at"][:10])
+        table.add_row(acc["store"], acc["platform"], acc["marketplace"], acc["created_at"][:10])
     console.print(table)
 
 
 @account_app.command("add")
 def add_account(
-    name: str = typer.Option(..., "--name", "-n", help="账号别名，如 store_us_1"),
+    store: str = typer.Option(..., "--store", "-s", help="店铺名称，如 rovestep"),
     marketplace: str = typer.Option("US", "--marketplace", "-m"),
     client_id: str = typer.Option(..., "--client-id"),
     client_secret: str = typer.Option(..., "--client-secret"),
@@ -122,31 +124,31 @@ def add_account(
     if role_arn:
         credentials["role_arn"] = role_arn
     acc = client.post("/admin/accounts", {
-        "name": name,
+        "store": store,
         "platform": "amazon",
         "marketplace": marketplace,
         "credentials": credentials,
     })
-    console.print(f"[green]账号 '{acc['name']}' ({acc['marketplace']}) 已添加[/green]")
+    console.print(f"[green]Amazon 账号 '{acc['store']}' ({acc['marketplace']}) 已添加[/green]")
 
 
 @account_app.command("add-mock")
 def add_mock_account(
-    name: str = typer.Option(..., "--name", "-n", help="账号别名，如 test_mock"),
+    store: str = typer.Option(..., "--store", "-s", help="店铺名称，如 test"),
 ):
     """添加 Mock 测试账号（本地开发用，返回假数据，不调用真实平台 API）"""
     acc = client.post("/admin/accounts", {
-        "name": name,
+        "store": store,
         "platform": "mock",
         "marketplace": "MOCK",
         "credentials": {},
     })
-    console.print(f"[green]Mock 账号 '{acc['name']}' 已添加，可用于开发测试[/green]")
+    console.print(f"[green]Mock 账号 '{acc['store']}' 已添加，可用于开发测试[/green]")
 
 
 @account_app.command("add-coupang")
 def add_coupang_account(
-    name: str = typer.Option(..., "--name", "-n", help="账号别名，如 store_kr_1"),
+    store: str = typer.Option(..., "--store", "-s", help="店铺名称，如 rovestep"),
     access_key: str = typer.Option(..., "--access-key", help="Coupang Open API Access Key"),
     secret_key: str = typer.Option(..., "--secret-key", help="Coupang Open API Secret Key"),
     vendor_id: str = typer.Option(..., "--vendor-id", help="Vendor ID，如 A00012345"),
@@ -160,21 +162,24 @@ def add_coupang_account(
         "tz_offset": tz_offset,
     }
     acc = client.post("/admin/accounts", {
-        "name": name,
+        "store": store,
         "platform": "coupang",
         "marketplace": "KR",
         "credentials": credentials,
     })
-    console.print(f"[green]Coupang 账号 '{acc['name']}' 已添加[/green]")
+    console.print(f"[green]Coupang 账号 '{acc['store']}' 已添加[/green]")
 
 
 @account_app.command("remove")
-def remove_account(name: str = typer.Option(..., "--name", "-n")):
+def remove_account(
+    platform: str = typer.Option(..., "--platform", "-p", help="平台: amazon / coupang / mock"),
+    store: str = typer.Option(..., "--store", "-s", help="店铺名称，如 rovestep"),
+):
     """删除平台账号"""
-    if not Confirm.ask(f"确认删除账号 '{name}'？此操作不可恢复"):
+    if not Confirm.ask(f"确认删除账号 '{platform}:{store}'？此操作不可恢复"):
         raise typer.Abort()
-    client.delete(f"/admin/accounts/{name}")
-    console.print(f"[green]账号 '{name}' 已删除[/green]")
+    client.delete(f"/admin/accounts/{platform}/{store}")
+    console.print(f"[green]账号 '{platform}:{store}' 已删除[/green]")
 
 
 # ── 审计日志 ──

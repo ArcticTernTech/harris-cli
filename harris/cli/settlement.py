@@ -20,13 +20,13 @@ SETTLEMENT_COLUMNS = [
 
 @app.command("list")
 def list_settlement(
-    account: str = typer.Option(..., "--account", "-a", help="账号别名（Coupang 账号）"),
+    store: str = typer.Option(..., "--store", "-s", help="店铺名称，如 rovestep"),
     month: str = typer.Option(..., "--month", "-m", help="销售月份，格式 YYYY-MM，如 2026-06"),
     fmt: str = typer.Option(None, "--format", "-f", help="输出格式: json（适合 AI Agent）"),
 ):
     """查询 Coupang 结算明细"""
     with console.status(f"获取 {month} 结算数据..."):
-        records = client.get("/settlement", account=account, month=month)
+        records = client.get("/settlement", platform="coupang", store=store, month=month)
 
     if not records:
         console.print("[yellow]未找到结算记录[/yellow]")

@@ -18,7 +18,8 @@ INVENTORY_COLUMNS = [
 
 @app.command("list")
 def list_inventory(
-    account: str = typer.Option(..., "--account", "-a", help="账号别名"),
+    platform: str = typer.Option(..., "--platform", "-p", help="平台: amazon / coupang / mock"),
+    store: str = typer.Option(..., "--store", "-s", help="店铺名称，如 rovestep"),
     sku: str = typer.Option(None, "--sku", help="按 SKU 过滤"),
     low: int = typer.Option(None, "--low", help="只显示库存低于此数量的 SKU"),
     out: str = typer.Option(None, "--output", "-o", help="导出路径，支持 .csv / .json"),
@@ -26,7 +27,7 @@ def list_inventory(
 ):
     """查看库存"""
     with console.status("获取库存中..."):
-        items = client.get("/inventory", account=account, sku=sku, low=low)
+        items = client.get("/inventory", platform=platform, store=store, sku=sku, low=low)
     if not items:
         console.print("[yellow]没有库存记录[/yellow]")
         return
@@ -35,12 +36,13 @@ def list_inventory(
 
 @app.command("alert")
 def alert(
-    account: str = typer.Option(..., "--account", "-a", help="账号别名"),
+    platform: str = typer.Option(..., "--platform", "-p", help="平台: amazon / coupang / mock"),
+    store: str = typer.Option(..., "--store", "-s", help="店铺名称，如 rovestep"),
     threshold: int = typer.Option(20, "--threshold", "-t", help="低库存阈值"),
 ):
     """显示需要补货的 SKU"""
     with console.status("检查库存..."):
-        items = client.get("/inventory", account=account, low=threshold)
+        items = client.get("/inventory", platform=platform, store=store, low=threshold)
     if not items:
         console.print(f"[green]所有库存均高于 {threshold}，无需补货。[/green]")
         return
